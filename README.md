@@ -2,6 +2,9 @@
 
 Responzivní webová PWA pro sledování osobních příjmů a výdajů. Projekt je napsaný v **HTML, CSS a vanilla JavaScriptu** – bez frameworku.
 
+## Odkaz na web v produkci
+https://b2024biskda.delta-www.cz
+
 ## Funkce
 
 - Rychlé přidání transakce (výdaj / příjem, kategorie, více měn)
