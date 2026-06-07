@@ -26,8 +26,7 @@ financni-appka/
 ├── web/                  # Webová aplikace (hlavní projekt)
 ├── navrh-projektu.md     # Zadání projektu
 ├── DOKUMENTACE.md        # Tato dokumentace
-├── README.md             # Přehled a spuštění
-└── package.json          # npm skript pro lokální běh
+└── README.md             # Přehled a spuštění
 ```
 
 ### Složka `web/`
