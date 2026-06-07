@@ -59,4 +59,4 @@ web/
 
 ## Technologie
 
-HTML5 · CSS3 · JavaScript (ES moduly) · Fetch API · localStorage · PWA
+HTML5 · CSS3 · JavaScript · Fetch API · localStorage · PWA
