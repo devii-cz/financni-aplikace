@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="Sledování osobních výdajů a příjmů">
+  <meta name="theme-color" content="#2563eb">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Finance">
+  <title>Finanční aplikace</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" sizes="180x180">
+  <link rel="apple-touch-icon" href="icon-192.png" sizes="192x192">
+</head>
+<body>
+  <header class="header">
+    <h1 class="header__title">
+      <svg class="header__logo" width="32" height="32" viewBox="0 0 32 32" aria-hidden="true">
+        <defs>
+          <linearGradient id="header-logo-bg" x1="4" y1="3" x2="28" y2="29" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#3b82f6"/>
+            <stop offset="100%" stop-color="#1d4ed8"/>
+          </linearGradient>
+        </defs>
+        <rect width="32" height="32" rx="8" fill="url(#header-logo-bg)"/>
+        <g fill="#fff">
+          <rect x="9" y="11" width="3" height="6.5" rx="0.75" opacity="0.5"/>
+          <rect x="13.5" y="8.5" width="3" height="9" rx="0.75" opacity="0.75"/>
+          <rect x="18" y="6.5" width="3" height="11" rx="0.75"/>
+        </g>
+        <path fill="#fff" d="M7.5 18.25c0-1.24 1.01-2.25 2.25-2.25h12.5c1.24 0 2.25 1.01 2.25 2.25v5.5c0 1.24-1.01 2.25-2.25 2.25H9.75c-1.24 0-2.25-1.01-2.25-2.25v-5.5z"/>
+        <rect x="9.5" y="19.25" width="13" height="1.25" rx="0.625" fill="#dbeafe"/>
+        <circle cx="22.25" cy="21" r="1.875" fill="#2563eb"/>
+        <circle cx="11.75" cy="21" r="1.375" fill="#16a34a"/>
+      </svg>
+      Finance
+    </h1>
+    <button
+      type="button"
+      id="menu-toggle"
+      class="btn btn--menu"
+      aria-label="Otevřít menu"
+      aria-expanded="false"
+      aria-controls="header-menu"
+    >
+      <span class="menu-icon" aria-hidden="true">
+        <svg class="menu-icon__svg" viewBox="0 0 18 14" width="18" height="14" focusable="false">
+          <line class="menu-icon__line" x1="0" y1="1" x2="18" y2="1" />
+          <line class="menu-icon__line" x1="0" y1="7" x2="18" y2="7" />
+          <line class="menu-icon__line" x1="0" y1="13" x2="18" y2="13" />
+        </svg>
+      </span>
+    </button>
+    <nav id="header-menu" class="header-menu" hidden>
+      <div class="header-menu__section">
+        <label for="currency-select" class="header-menu__label">Měna zobrazení</label>
+        <select id="currency-select" class="header-menu__control" aria-label="Vyberte měnu">
+        </select>
+      </div>
+      <div class="header-menu__section">
+        <span class="header-menu__label">Vzhled</span>
+        <button type="button" id="theme-toggle" class="header-menu__control" aria-label="Přepnout světlý/tmavý režim">
+          <span id="theme-toggle-label">Tmavý režim</span>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <div id="menu-backdrop" class="menu-backdrop" hidden></div>
+
+  <div id="app-status" class="app-status" role="alert" hidden></div>
+
+  <nav class="tabs" role="tablist" aria-label="Sekce aplikace">
+    <button type="button" class="tabs__btn tabs__btn--active" role="tab" data-tab="overview">Přehled</button>
+    <button type="button" class="tabs__btn" role="tab" data-tab="add">Přidat</button>
+    <button type="button" class="tabs__btn" role="tab" data-tab="stats">Statistiky</button>
+    <button type="button" class="tabs__btn" role="tab" data-tab="history">Historie</button>
+  </nav>
+
+  <main class="main">
+    <section id="panel-overview" class="tab-panel tab-panel--active" data-panel="overview">
+      <div class="balance" aria-live="polite">
+        <p class="balance__label">Aktuální zůstatek</p>
+        <p id="balance-amount" class="balance__amount">0 Kč</p>
+        <p id="balance-hint" class="balance__hint" hidden></p>
+      </div>
+
+      <div class="overview-cards">
+        <div class="overview-card">
+          <span class="overview-card__label">Příjmy</span>
+          <span id="overview-income" class="overview-card__value overview-card__value--income">0</span>
+        </div>
+        <div class="overview-card">
+          <span class="overview-card__label">Výdaje</span>
+          <span id="overview-expense" class="overview-card__value overview-card__value--expense">0</span>
+        </div>
+        <div class="overview-card">
+          <span class="overview-card__label">Počet položek</span>
+          <span id="overview-count" class="overview-card__value">0</span>
+        </div>
+      </div>
+
+      <div class="quick-add">
+        <h2 class="section-title">Rychlé přidání</h2>
+        <form id="quick-form" class="transaction-form" novalidate data-form="quick">
+          <div class="type-toggle" role="group" aria-label="Typ transakce">
+            <button type="button" class="type-toggle__btn type-toggle__btn--active" data-type="expense" data-form-target="quick">Výdaj</button>
+            <button type="button" class="type-toggle__btn" data-type="income" data-form-target="quick">Příjem</button>
+          </div>
+          <div class="form-group">
+            <label for="quick-name">Název</label>
+            <input type="text" id="quick-name" placeholder="Např. Oběd" maxlength="80" required>
+          </div>
+          <div class="quick-add__row">
+            <div class="form-group form-group--compact">
+              <label for="quick-amount">Částka (<span class="js-currency-symbol">Kč</span>)</label>
+              <input type="text" id="quick-amount" placeholder="150" inputmode="decimal" autocomplete="off" required>
+            </div>
+            <div class="form-group form-group--compact">
+              <label for="quick-category">Kategorie</label>
+              <select id="quick-category" required></select>
+            </div>
+          </div>
+          <button type="submit" id="quick-submit" class="btn btn--primary">Přidat</button>
+          <span id="quick-error" class="form-error" role="alert"></span>
+        </form>
+      </div>
+    </section>
+
+    <section id="panel-add" class="tab-panel" data-panel="add" hidden>
+      <h2 class="section-title">Nová položka</h2>
+      <form id="transaction-form" class="transaction-form" novalidate data-form="full">
+        <div class="type-toggle" role="group" aria-label="Typ transakce">
+          <button type="button" class="type-toggle__btn type-toggle__btn--active" data-type="expense" data-form-target="full">Výdaj</button>
+          <button type="button" class="type-toggle__btn" data-type="income" data-form-target="full">Příjem</button>
+        </div>
+        <div class="form-group">
+          <label for="name-input">Název</label>
+          <input type="text" id="name-input" placeholder="Např. Nákup v obchodě" maxlength="80" required>
+        </div>
+        <div class="form-group">
+          <label for="amount-input">Částka (<span class="js-currency-symbol">Kč</span>)</label>
+          <input type="text" id="amount-input" placeholder="150" required autocomplete="off" inputmode="decimal">
+          <span id="amount-error" class="form-error" role="alert"></span>
+        </div>
+        <div class="form-group">
+          <label for="category-select">Kategorie</label>
+          <select id="category-select" required></select>
+        </div>
+        <button type="submit" id="submit-btn" class="btn btn--primary">Přidat</button>
+      </form>
+      <p id="offline-status" class="offline-status" hidden>Offline režim – položky se odešlou po připojení.</p>
+    </section>
+
+    <section id="panel-stats" class="tab-panel" data-panel="stats" hidden>
+      <div class="stats-header">
+        <h2 class="section-title">Statistiky</h2>
+        <p class="stats-header__hint">Rozšířený přehled podle období, typu i kategorií.</p>
+      </div>
+
+      <div class="stats-controls">
+        <div class="form-group form-group--compact">
+          <label for="stats-period">Období</label>
+          <select id="stats-period">
+            <option value="all">Celá historie</option>
+            <option value="30d">Posledních 30 dní</option>
+            <option value="month">Tento měsíc</option>
+            <option value="year">Tento rok</option>
+          </select>
+        </div>
+        <div class="form-group form-group--compact">
+          <label for="stats-type">Typ</label>
+          <select id="stats-type">
+            <option value="expense">Výdaje</option>
+            <option value="income">Příjmy</option>
+            <option value="balance">Bilance (příjmy - výdaje)</option>
+          </select>
+        </div>
+        <div class="form-group form-group--compact">
+          <label for="stats-chart-type">Graf</label>
+          <select id="stats-chart-type">
+            <option value="bar">Sloupce</option>
+            <option value="donut">Kruh</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="stats-cards">
+        <article class="stats-card">
+          <span class="stats-card__label">Celkem</span>
+          <strong id="stats-total" class="stats-card__value">0 Kč</strong>
+        </article>
+        <article class="stats-card">
+          <span class="stats-card__label">Počet položek</span>
+          <strong id="stats-count" class="stats-card__value">0</strong>
+        </article>
+        <article class="stats-card">
+          <span class="stats-card__label">Průměr</span>
+          <strong id="stats-average" class="stats-card__value">0 Kč</strong>
+        </article>
+        <article class="stats-card">
+          <span class="stats-card__label">Největší položka</span>
+          <strong id="stats-largest" class="stats-card__value">0 Kč</strong>
+        </article>
+      </div>
+
+      <div class="chart-wrapper">
+        <canvas id="category-chart" width="400" height="240" aria-label="Graf statistik podle kategorií"></canvas>
+      </div>
+
+      <div class="stats-details">
+        <section class="stats-panel">
+          <h3 class="stats-panel__title">Žebříček kategorií</h3>
+          <ul id="stats-category-list" class="stats-list">
+            <li class="stats-list__empty">Zatím bez dat.</li>
+          </ul>
+        </section>
+        <section class="stats-panel">
+          <h3 class="stats-panel__title">Top transakce</h3>
+          <ul id="stats-transaction-list" class="stats-list">
+            <li class="stats-list__empty">Zatím bez dat.</li>
+          </ul>
+        </section>
+      </div>
+    </section>
+
+    <section id="panel-history" class="tab-panel" data-panel="history" hidden>
+      <h2 class="section-title">Historie</h2>
+      <ul id="transaction-list" class="transaction-list">
+        <li class="transaction-list__empty">Načítám…</li>
+      </ul>
+    </section>
+  </main>
+
+  <div id="edit-sheet" class="txn-sheet" hidden>
+    <div id="edit-sheet-backdrop" class="txn-sheet__backdrop"></div>
+    <div
+      class="txn-sheet__panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="edit-sheet-title"
+    >
+      <h2 id="edit-sheet-title" class="txn-sheet__title">Upravit položku</h2>
+      <form id="edit-form" class="transaction-form txn-sheet__form" novalidate>
+        <div class="type-toggle" role="group" aria-label="Typ transakce">
+          <button type="button" class="type-toggle__btn type-toggle__btn--active" data-type="expense" data-form-target="edit">Výdaj</button>
+          <button type="button" class="type-toggle__btn" data-type="income" data-form-target="edit">Příjem</button>
+        </div>
+        <div class="form-group">
+          <label for="edit-name">Název</label>
+          <input type="text" id="edit-name" maxlength="80" required>
+        </div>
+        <div class="form-group">
+          <label for="edit-amount">Částka (<span class="js-currency-symbol">Kč</span>)</label>
+          <input type="text" id="edit-amount" inputmode="decimal" autocomplete="off" required>
+          <span id="edit-error" class="form-error" role="alert"></span>
+        </div>
+        <div class="form-group">
+          <label for="edit-category">Kategorie</label>
+          <select id="edit-category" required></select>
+        </div>
+        <div class="txn-sheet__actions">
+          <button type="button" id="edit-cancel" class="btn btn--secondary">Zrušit</button>
+          <button type="submit" id="edit-save" class="btn btn--primary">Uložit</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="delete-dialog" class="txn-dialog" hidden>
+    <div id="delete-dialog-backdrop" class="txn-dialog__backdrop"></div>
+    <div class="txn-dialog__panel" role="alertdialog" aria-modal="true" aria-labelledby="delete-dialog-title">
+      <h2 id="delete-dialog-title" class="txn-dialog__title">Smazat položku?</h2>
+      <p id="delete-dialog-text" class="txn-dialog__text">Tuto akci nelze vrátit zpět.</p>
+      <div class="txn-dialog__actions">
+        <button type="button" id="delete-cancel" class="btn btn--secondary">Zrušit</button>
+        <button type="button" id="delete-confirm" class="btn btn--primary btn--danger-fill">Smazat</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="config.js" defer></script>
+  <script type="module" src="script.js"></script>
+</body>
+</html>
