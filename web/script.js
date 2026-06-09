@@ -7,6 +7,7 @@ import {
   convertToCzk,
 } from './api.js';
 
+// konstanty a klice localstorage
 const STORAGE_THEME = 'theme';
 const STORAGE_DRAFTS = 'transactionDrafts';
 const STORAGE_CURRENCY = 'displayCurrency';
@@ -31,6 +32,7 @@ const formTypes = { quick: 'expense', full: 'expense', edit: 'expense' };
 
 const $ = (id) => document.getElementById(id);
 
+// reference na prvky v dom
 const els = {
   form: $('transaction-form'),
   quickForm: $('quick-form'),
@@ -88,6 +90,7 @@ const els = {
   deleteConfirm: $('delete-confirm'),
 };
 
+// stav aplikace data v pameti
 let transactions = [];
 let editingId = null;
 let deletingId = null;
@@ -103,6 +106,7 @@ let scrollLockPadding = 0;
 
 document.addEventListener('DOMContentLoaded', init);
 
+// hodnota z localstorage nebo vychozi
 function storageGet(key, fallback = null) {
   try {
     const value = localStorage.getItem(key);
@@ -136,6 +140,7 @@ function storageSetJson(key, data) {
   return storageSet(key, JSON.stringify(data));
 }
 
+// nastaveni udalosti a start aplikace
 function init() {
   buildCurrencySelect();
   setupTypeToggles();
@@ -211,6 +216,7 @@ function setupHeaderMenu() {
   els.menuBackdrop?.addEventListener('click', closeHeaderMenu);
 }
 
+// zamknuti scrollu pri otevrenem overlay
 function syncBodyScrollLock() {
   const locked =
     (els.headerMenu && !els.headerMenu.hidden) ||
@@ -264,6 +270,7 @@ function closeHeaderMenu() {
   syncBodyScrollLock();
 }
 
+// modaly pro editaci a smazani transakce
 function setupTxnModals() {
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeTopOverlay();
@@ -373,6 +380,7 @@ function updateCategorySelect(selectEl, type, selectedValue = null) {
   if (selectedValue) selectEl.value = selectedValue;
 }
 
+// ulozena mena a aktivni zalozka
 function loadSettings() {
   const savedCurrency = storageGet(STORAGE_CURRENCY, 'CZK');
   if (CURRENCIES.some((c) => c.code === savedCurrency)) {
@@ -414,7 +422,7 @@ function hasValidDisplayRate() {
   return typeof rate === 'number' && rate > 0;
 }
 
-/** Bez platného kurzu zobrazíme Kč – nikdy „800 $“ bez přepočtu. */
+// mena pro zobrazeni podle dostupneho kurzu
 function getEffectiveDisplayCurrency() {
   return hasValidDisplayRate() ? displayCurrency : 'CZK';
 }
@@ -474,6 +482,7 @@ function updateBalanceHint() {
   els.balanceHint.textContent = hint;
 }
 
+// kurzy men z api a cache
 async function fetchAndCacheRates() {
   if (location.protocol === 'file:') return;
 
@@ -514,6 +523,7 @@ function switchTab(tabId, save = true) {
   if (tabId === 'stats') renderChart();
 }
 
+// prvotni nacteni transakci kurzu a draftu
 async function bootstrap() {
   applyCurrencyUI();
   render();
@@ -581,6 +591,7 @@ function setLoading(loading) {
   if (els.quickSubmit) els.quickSubmit.textContent = loading ? 'Ukládám…' : 'Přidat';
 }
 
+// validace castky z formulare
 function parseAmount(raw) {
   const trimmed = raw.trim().replace(/\s+/g, ' ').replace(',', '.');
   const match = trimmed.match(/^(\d+(?:\.\d+)?)$/);
@@ -650,6 +661,7 @@ async function handleFormSubmit(event, mode) {
   }
 }
 
+// nova transakce v kc pred odeslanim
 async function addTransaction(parsed, category, name, type) {
   let amountCzk = parsed.amount;
   if (parsed.currency !== 'CZK') {
@@ -669,6 +681,7 @@ async function addTransaction(parsed, category, name, type) {
   render();
 }
 
+// ulozeni transakce offline do fronty
 function saveDraft(draft) {
   const drafts = getDrafts();
   drafts.push({ ...draft, createdAt: Date.now() });
@@ -730,6 +743,7 @@ async function loadTransactions() {
   render();
 }
 
+// castka v zvolene mene pro ui
 function toDisplayAmount(amountCzk) {
   const currency = getEffectiveDisplayCurrency();
   if (currency === 'CZK') return amountCzk;
@@ -741,11 +755,13 @@ function getTransactionType(t) {
   return Number(t.amount) >= 0 ? 'income' : 'expense';
 }
 
+// znamenko castky podle typu transakce
 function getSignedAmount(t) {
   const abs = Math.abs(Number(t.amount));
   return getTransactionType(t) === 'income' ? abs : -abs;
 }
 
+// aktualizace vsech casti rozhrani
 function render() {
   renderBalance();
   renderOverview();
@@ -828,6 +844,7 @@ function renderList() {
     .join('');
 }
 
+// obsluha tlacitek v seznamu transakci
 function handleListClick(event) {
   const btn = event.target.closest('[data-action]');
   if (!btn) return;
@@ -924,6 +941,7 @@ async function handleEditSubmit(event) {
   }
 }
 
+// transakce filtrovane podle obdobi statistik
 function getStatsFilteredTransactions() {
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -995,6 +1013,7 @@ function renderStatsCards(total, count, largest) {
   els.statsLargest.textContent = formatMoney(largest);
 }
 
+// vykresleni grafu statistik na canvas
 function renderChart() {
   const canvas = els.chart;
   if (!canvas) return;
@@ -1126,6 +1145,7 @@ function formatMoney(value, withSign = false, currency) {
   }).format(value);
 }
 
+// bezpecny text v html sablonach
 function escapeHtml(str) {
   return String(str)
     .replace(/&/g, '&amp;')
@@ -1138,6 +1158,7 @@ function escapeAttr(str) {
   return escapeHtml(str).replace(/'/g, '&#39;');
 }
 
+// service worker pro offline pwa
 function registerServiceWorker() {
   if (!('serviceWorker' in navigator) || location.protocol === 'file:') return;
   navigator.serviceWorker.register('sw.js').catch(() => {});
